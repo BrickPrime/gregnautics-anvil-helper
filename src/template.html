@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="__CSP__">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#b25a28">
+<meta name="description" content="Calculateur d'enclume TerraFirmaCraft pour le modpack Gregnautics : séquence de coups la plus courte et cible calculée depuis la graine du monde.">
+<title>Enclume Gregnautics</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23b25a28' d='M4 9h20c0 4-3 6-7 6v4h4v4H9v-4h4v-4c-5 0-9-2-9-6z'/%3E%3Crect fill='%23b25a28' x='7' y='25' width='18' height='3' rx='1'/%3E%3C/svg%3E">
+<style>__STYLE__</style>
+</head>
+<body>
+<a class="skip" href="#app">Aller au calculateur</a>
+<header class="top">
+  <div class="top-in">
+    <div>
+      <h1>Enclume Gregnautics</h1>
+      <p class="lede">La suite de coups la plus courte pour forger chaque objet, dans tous les métaux et alliages. Avec la graine du monde, la cible se calcule toute seule.</p>
+    </div>
+    <p class="badges"><span>Minecraft 1.21.1</span><span>TerraFirmaCraft 4.2.11</span><span>Gregnautics</span></p>
+  </div>
+</header>
+
+<main id="app" class="wrap">
+  <div class="layout">
+    <aside class="side" aria-label="Réglages">
+      <section class="card">
+        <h2 class="card-t"><span class="num">1</span>Monde</h2>
+        <label class="fld" for="seed">Graine du monde
+          <input id="seed" type="text" maxlength="40" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="numeric" placeholder="Résultat de /seed">
+        </label>
+        <p class="hint" id="seedinfo"></p>
+      </section>
+
+      <section class="card">
+        <h2 class="card-t"><span class="num">2</span>Objet</h2>
+        <label class="fld" for="search">Rechercher
+          <input id="search" type="search" maxlength="40" autocomplete="off" spellcheck="false" placeholder="ex. pickaxe, bronze, sheet…">
+        </label>
+        <ul id="results" class="results" hidden></ul>
+        <label class="fld" for="metal">Métal ou alliage
+          <select id="metal"></select>
+        </label>
+        <label class="fld" for="item">Objet à forger
+          <select id="item"></select>
+        </label>
+        <div id="meta" class="chips" aria-live="polite"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-t"><span class="num">3</span>Cible et position</h2>
+        <div class="row2">
+          <label class="fld" for="target">Cible <span class="dot red" aria-hidden="true"></span>
+            <input id="target" type="number" min="40" max="113" step="1" inputmode="numeric">
+          </label>
+          <label class="fld" for="cur">Position <span class="dot green" aria-hidden="true"></span>
+            <input id="cur" type="number" min="0" max="150" step="1" value="0" inputmode="numeric">
+          </label>
+        </div>
+        <div class="status" id="status" aria-live="polite">
+          <p id="statustext"></p>
+          <button class="btn ghost sm" id="forget" type="button" hidden>Revenir au calcul</button>
+        </div>
+        <details class="adv" id="adv">
+          <summary>Options avancées</summary>
+          <label class="fld" for="oid">Identifiant de l'objet produit
+            <select id="oid"></select>
+          </label>
+          <input id="oidcustom" type="text" maxlength="100" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="ex. gtceu:copper_plate" aria-label="Identifiant personnalisé" hidden>
+          <p class="hint">La cible dépend de cet identifiant. Change-le seulement si la cible calculée ne correspond pas au jeu.</p>
+          <p class="sub">Lingot déjà frappé</p>
+          <div class="row3">
+            <label class="fld" for="h1">Dernier coup <select id="h1"></select></label>
+            <label class="fld" for="h2">Avant-dernier <select id="h2"></select></label>
+            <label class="fld" for="h3">Avant encore <select id="h3"></select></label>
+          </div>
+        </details>
+      </section>
+    </aside>
+
+    <section class="result" aria-label="Séquence de coups">
+      <div class="card res-card">
+        <div class="res-head">
+          <div>
+            <p class="item-title" id="itemtitle"></p>
+            <p class="count" id="count" aria-live="polite"></p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="next" type="button">Coup suivant</button>
+            <button class="btn ghost" id="reset" type="button">Recommencer</button>
+          </div>
+        </div>
+        <div class="barwrap">
+          <div class="bar" id="bar" role="img" aria-label="Barre de l'enclume">
+            <div class="zone zl"></div><div class="zone zr"></div>
+            <div class="mk t" id="mt"><span id="mtl"></span></div>
+            <div class="mk c" id="mc"><span id="mcl"></span></div>
+          </div>
+          <div class="scale" aria-hidden="true"><span>0</span><span>40</span><span>113</span><span>150</span></div>
+        </div>
+        <ol class="steps" id="steps"></ol>
+        <p class="msg" id="msg" hidden></p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-t">Boutons de l'enclume</h2>
+        <div class="grid" id="grid"></div>
+        <p class="hint">Vert : la flèche verte avance. Rouge : elle recule. Le bouton encadré est le prochain coup.</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="card list-card" aria-labelledby="tabtitle">
+    <div class="list-head">
+      <h2 class="card-t" id="tabtitle">Recettes</h2>
+      <div class="actions">
+        <button class="btn ghost sm" id="export" type="button">Exporter mes cibles</button>
+        <label class="btn ghost sm filebtn" for="import">Importer
+          <input id="import" type="file" accept="application/json,.json">
+        </label>
+      </div>
+    </div>
+    <div class="rows-head" aria-hidden="true"><span>Objet</span><span>Entrée</span><span>Règles</span><span>Coups</span><span>Cible</span></div>
+    <ul class="rows" id="rows"></ul>
+    <p class="hint">Touche une ligne pour la charger. Coups : minimum et maximum selon la cible. Cible en italique : calculée depuis la graine. Cible normale : saisie par toi.</p>
+  </section>
+
+  <section class="card notes">
+    <h2 class="card-t">Comment ça marche</h2>
+    <details><summary>Ce que le jeu vérifie</summary>
+      <p>Après chaque coup, TerraFirmaCraft vérifie deux choses : la flèche verte est exactement sur la flèche rouge, et les trois derniers coups respectent toutes les règles de la recette. Dès que c'est le cas, l'objet sort.</p>
+      <p>La barre va de 0 à 150. En sortir détruit le lingot ; le calculateur ne le fait jamais. Light, Medium et Hard Hit comptent tous comme « Hit » pour les règles.</p>
+    </details>
+    <details><summary>La graine et les cibles</summary>
+      <p>La cible d'un objet dépend uniquement de la graine du monde et de l'identifiant de l'objet produit. Elle ne change ni avec l'enclume, ni avec le lingot, ni avec le joueur. La commande <code>/seed</code> donne la graine.</p>
+      <p>Si tu saisis une cible vue en jeu, elle remplace le calcul pour cet objet. Si elle diffère du calcul, un avertissement s'affiche : la graine ou l'identifiant est probablement faux.</p>
+    </details>
+    <details><summary>Identifiants incertains</summary>
+      <p>Dans Gregnautics, beaucoup de plaques, tiges, anneaux et vis sortent en objets GregTech. Quand l'identifiant exact ne se lit pas dans les scripts du pack, plusieurs candidats sont proposés dans les options avancées. Celui qui donne la cible vue en jeu est le bon.</p>
+    </details>
+    <details><summary>Origine des recettes</summary>
+      <p><b>TFC</b> : recette de TerraFirmaCraft. <b>Addon</b> : mod ajouté au pack (Firmalife, TFC Items, Hammer Time…). <b>Pack</b> : recette réécrite ou ajoutée par les scripts KubeJS de Gregnautics.</p>
+    </details>
+    <details><summary>Confidentialité</summary>
+      <p>La page fonctionne hors ligne et n'envoie rien sur Internet. La graine et tes cibles restent dans ton navigateur. Utilise « Exporter » puis « Importer » pour les passer d'un appareil à l'autre.</p>
+    </details>
+  </section>
+</main>
+
+<div class="nextbar" id="nextbar" hidden>
+  <p id="nexttext"></p>
+  <button class="btn" id="next2" type="button">Fait</button>
+</div>
+<footer class="foot">Projet communautaire, non affilié à TerraFirmaCraft ni à Mojang.</footer>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>__SCRIPT__</script>
+</body>
+</html>
